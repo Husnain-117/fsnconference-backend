@@ -3,6 +3,8 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import registrationRoutes from './routes/registrationRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+
 dotenv.config();
 
 const app = express();
@@ -12,6 +14,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use('/api', registrationRoutes);
+app.use('/api', contactRoutes);
 
 app.get('/', (req, res) => {
   res.send('Backend for Conference Registration is running.');
