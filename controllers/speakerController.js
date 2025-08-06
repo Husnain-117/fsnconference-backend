@@ -7,6 +7,16 @@ import Speaker from '../models/SpeakerModel.js';
 const getSpeakers = async (req, res) => {
   try {
     const speakers = await Speaker.find().sort({ createdAt: -1 });
+    
+    // Debug: Log image URLs to see what's being returned
+    console.log('=== GET SPEAKERS DEBUG ===');
+    speakers.forEach((speaker, index) => {
+      console.log(`Speaker ${index + 1}: ${speaker.name}`);
+      console.log(`  Image URL: "${speaker.image}"`);
+      console.log(`  Image is undefined: ${speaker.image === undefined}`);
+      console.log(`  Image is empty: ${speaker.image === ''}`);
+    });
+    
     res.json(speakers);
   } catch (err) {
     console.error(err);
@@ -16,6 +26,19 @@ const getSpeakers = async (req, res) => {
 
 const addSpeaker = async (req, res) => {
   try {
+    console.log('=== ADD SPEAKER DEBUG ===');
+    console.log('Environment VERCEL:', process.env.VERCEL);
+    console.log('Request file:', req.file ? 'File present' : 'No file');
+    if (req.file) {
+      console.log('File details:', {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        filename: req.file.filename || 'undefined',
+        buffer: req.file.buffer ? 'Buffer present' : 'No buffer'
+      });
+    }
+    
     const {
       name,
       title,
@@ -44,11 +67,14 @@ const addSpeaker = async (req, res) => {
         
         // TODO: In production, upload req.file.buffer to cloud storage (Cloudinary/S3)
         // and use the returned URL instead
-        console.log('File uploaded to memory storage:', filename);
+        console.log('Generated imageUrl for Vercel:', imageUrl);
       } else {
         // Local development (disk storage)
         imageUrl = `/uploads/speakers/${req.file.filename}`;
+        console.log('Generated imageUrl for local:', imageUrl);
       }
+    } else {
+      console.log('No file uploaded, imageUrl will be empty');
     }
 
     // Build document
