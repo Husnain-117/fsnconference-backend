@@ -22,7 +22,7 @@ app.use('/api', contactRoutes);
 app.use('/api', speakerRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Backend for Conference Registration is running.');
+  res.send('FSN Conference backend is running');
 });
 
 app.listen(PORT, () => {
