@@ -130,4 +130,4 @@ const deleteSpeaker = async (req, res) => {
 };
 
 
-module.exports = { getSpeakers, addSpeaker, getSpeakerImage, deleteSpeaker };
+export { getSpeakers, addSpeaker, getSpeakerImage, deleteSpeaker };
