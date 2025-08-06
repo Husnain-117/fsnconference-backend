@@ -33,6 +33,24 @@ const addSpeaker = async (req, res) => {
       return res.status(400).json({ message: 'Speaker name is required.' });
     }
 
+    // Handle image filename for both disk and memory storage
+    let imageUrl = '';
+    if (req.file) {
+      if (process.env.VERCEL) {
+        // On Vercel (memory storage), use original filename with timestamp
+        const safeFileName = req.file.originalname.toLowerCase().replace(/[^a-z0-9.]/g, '-');
+        const filename = `${Date.now()}-${safeFileName}`;
+        imageUrl = `/uploads/speakers/${filename}`;
+        
+        // TODO: In production, upload req.file.buffer to cloud storage (Cloudinary/S3)
+        // and use the returned URL instead
+        console.log('File uploaded to memory storage:', filename);
+      } else {
+        // Local development (disk storage)
+        imageUrl = `/uploads/speakers/${req.file.filename}`;
+      }
+    }
+
     // Build document
     const newSpeaker = new Speaker({
       name,
@@ -45,7 +63,7 @@ const addSpeaker = async (req, res) => {
       featured: featured === 'true' || featured === true,
       talkTitle: talkTitle || '',
       talkDescription: talkDescription || '',
-      image: req.file ? `/uploads/speakers/${req.file.filename}` : ''
+      image: imageUrl
     });
 
     const savedSpeaker = await newSpeaker.save();
