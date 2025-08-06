@@ -7,11 +7,37 @@ import { uploadToCloudinary } from '../config/cloudinary.js';
 
 const getSpeakers = async (req, res) => {
   try {
-    const speakers = await Speaker.find().sort({ createdAt: -1 });
+    // Exclude the 'image' field to make the initial payload small and fast
+    const speakers = await Speaker.find().select('-image').sort({ createdAt: -1 });
     res.json(speakers);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error fetching speakers.' });
+  }
+};
+
+// New controller to serve a single speaker's image
+const getSpeakerImage = async (req, res) => {
+  try {
+    const speaker = await Speaker.findById(req.params.id).select('image');
+    if (!speaker || !speaker.image) {
+      return res.status(404).send('Image not found');
+    }
+
+    // The image is a Base64 data URI. Decode it and send it as a proper image response.
+    const parts = speaker.image.split(';base64,');
+    const mimeType = parts[0].split(':')[1];
+    const imageBuffer = Buffer.from(parts[1], 'base64');
+
+    res.writeHead(200, {
+      'Content-Type': mimeType,
+      'Content-Length': imageBuffer.length
+    });
+    res.end(imageBuffer);
+
+  } catch (err) {
+    console.error('Error fetching speaker image:', err);
+    res.status(500).send('Error fetching image');
   }
 };
 
@@ -51,10 +77,10 @@ const addSpeaker = async (req, res) => {
     let imageUrl = '';
     if (req.file) {
       if (process.env.VERCEL) {
-        // On Vercel: convert buffer to base64 Data URI and store directly
+        // On Vercel, convert the image buffer to a Base64 data URI for storage
         const base64 = req.file.buffer.toString('base64');
         imageUrl = `data:${req.file.mimetype};base64,${base64}`;
-        console.log('Generated Base64 image URI for Vercel (length):', imageUrl.length);
+        console.log('Generated Base64 image URI for Vercel.');
       } else {
         // Local development (disk storage)
         imageUrl = `/uploads/speakers/${req.file.filename}`;
@@ -104,4 +130,4 @@ const deleteSpeaker = async (req, res) => {
 };
 
 
-export { getSpeakers, addSpeaker, deleteSpeaker };
+module.exports = { getSpeakers, addSpeaker, getSpeakerImage, deleteSpeaker };
