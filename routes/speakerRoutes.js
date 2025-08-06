@@ -7,7 +7,10 @@ import { getSpeakers, addSpeaker, deleteSpeaker } from '../controllers/speakerCo
 const router = express.Router();
 
 // Configure multer for file storage
-const storage = multer.diskStorage({
+// Vercel functions have a read-only filesystem, so fallback to memory storage there
+const storage = process.env.VERCEL
+  ? multer.memoryStorage()
+  : multer.diskStorage({
     destination: (req, file, cb) => {
         // The directory where files will be stored
         const dir = 'public/uploads/speakers';
@@ -22,7 +25,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // Route to get all speakers
 router.get('/speakers', getSpeakers);
