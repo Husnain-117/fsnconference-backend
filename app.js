@@ -8,7 +8,18 @@ import speakerRoutes from './routes/speakerRoutes.js';
 
 dotenv.config();
 
+import mongoose from 'mongoose';
+
 const app = express();
+
+// MongoDB Atlas connection
+const mongoURI = process.env.MONGODB_URI;
+if (!mongoURI) {
+  console.error('MONGODB_URI not set. Please add it to environment variables.');
+}
+mongoose.connect(mongoURI, { dbName: 'fsnconference' })
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
