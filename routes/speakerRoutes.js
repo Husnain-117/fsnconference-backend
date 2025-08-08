@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { getSpeakers, addSpeaker, deleteSpeaker } from '../controllers/speakerController.js';
+import { getSpeakers, addSpeaker, deleteSpeaker, updateSpeaker } from '../controllers/speakerController.js';
 
 const router = express.Router();
 
@@ -23,5 +23,8 @@ router.post('/speakers', upload.single('photo'), addSpeaker);
 
 // Route to delete a speaker by ID
 router.delete('/speakers/:id', deleteSpeaker);
+
+// Route to update a speaker by ID
+router.put('/speakers/:id', upload.single('photo'), updateSpeaker);
 
 export default router;

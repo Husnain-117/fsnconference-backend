@@ -99,4 +99,47 @@ const deleteSpeaker = async (req, res) => {
 };
 
 
-export { getSpeakers, addSpeaker, deleteSpeaker };
+const updateSpeaker = async (req, res) => {
+  const { id } = req.params;
+  const { name, title, type, company, bio, expertise, social, featured } = req.body;
+
+  try {
+    const speaker = await Speaker.findById(id);
+    if (!speaker) {
+      return res.status(404).json({ message: 'Speaker not found' });
+    }
+
+    let imageUrl = speaker.image; // Default to the existing image
+
+    // If a new file is uploaded, update the image
+    if (req.file) {
+      try {
+        imageUrl = await uploadToSupabase(req.file.buffer, req.file.originalname);
+        console.log('Uploaded new image to Supabase:', imageUrl);
+      } catch (uploadErr) {
+        console.error('Supabase upload failed during update:', uploadErr);
+        return res.status(500).json({ message: 'Image upload failed.' });
+      }
+    }
+
+    // Update speaker fields
+    speaker.name = name || speaker.name;
+    speaker.title = title !== undefined ? title : speaker.title;
+    speaker.type = type || speaker.type;
+    speaker.company = company !== undefined ? company : speaker.company;
+    speaker.bio = bio !== undefined ? bio : speaker.bio;
+    speaker.expertise = expertise ? (Array.isArray(expertise) ? expertise : expertise.split(',').map(e => e.trim())) : speaker.expertise;
+    speaker.social = social ? (typeof social === 'string' ? JSON.parse(social) : social) : speaker.social;
+    speaker.featured = featured !== undefined ? (featured === 'true' || featured === true) : speaker.featured;
+    speaker.image = imageUrl;
+
+    const updatedSpeaker = await speaker.save();
+    res.json(updatedSpeaker);
+
+  } catch (err) {
+    console.error('Error updating speaker:', err);
+    res.status(500).json({ message: 'Server error while updating speaker.' });
+  }
+};
+
+export { getSpeakers, addSpeaker, deleteSpeaker, updateSpeaker };
