@@ -1,5 +1,5 @@
 import Speaker from '../models/SpeakerModel.js';
-import { uploadToCloudinary } from '../config/cloudinary.js';
+import { uploadToSupabase } from '../config/supabase.js';
 
 // NOTE: We previously attempted to read/write speakers to a JSON file on disk. This approach fails
 // on Vercel’s serverless environment because the filesystem is read-only and ephemeral. All CRUD
@@ -47,25 +47,16 @@ const addSpeaker = async (req, res) => {
       return res.status(400).json({ message: 'Speaker name is required.' });
     }
 
-    // Handle image filename for both disk and memory storage
+    // Upload image to Supabase Storage if present
     let imageUrl = '';
     if (req.file) {
-      if (process.env.VERCEL) {
-        // On Vercel (memory storage), use original filename with timestamp
-        const safeFileName = req.file.originalname.toLowerCase().replace(/[^a-z0-9.]/g, '-');
-        const filename = `${Date.now()}-${safeFileName}`;
-        imageUrl = `/uploads/speakers/${filename}`;
-        
-        // TODO: In production, upload req.file.buffer to cloud storage (Cloudinary/S3)
-        // and use the returned URL instead
-        console.log('Generated imageUrl for Vercel:', imageUrl);
-      } else {
-        // Local development (disk storage)
-        imageUrl = `/uploads/speakers/${req.file.filename}`;
-        console.log('Generated imageUrl for local:', imageUrl);
+      try {
+        imageUrl = await uploadToSupabase(req.file.buffer, req.file.originalname);
+        console.log('Uploaded image to Supabase:', imageUrl);
+      } catch (uploadErr) {
+        console.error('Supabase upload failed:', uploadErr);
+        return res.status(500).json({ message: 'Image upload failed.' });
       }
-    } else {
-      console.log('No file uploaded, imageUrl will be empty');
     }
 
     // Build document

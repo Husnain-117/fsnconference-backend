@@ -8,22 +8,9 @@ const router = express.Router();
 
 // Configure multer for file storage
 // Vercel functions have a read-only filesystem, so fallback to memory storage there
-const storage = process.env.VERCEL
-  ? multer.memoryStorage()
-  : multer.diskStorage({
-    destination: (req, file, cb) => {
-        // The directory where files will be stored
-        const dir = 'public/uploads/speakers';
-        // Create the directory if it doesn't exist
-        fs.mkdirSync(dir, { recursive: true });
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        // Sanitize filename and ensure uniqueness
-        const safeFileName = file.originalname.toLowerCase().replace(/[^a-z0-9.]/g, '-');
-        cb(null, `${Date.now()}-${safeFileName}`);
-    }
-});
+// Configure multer to use memory storage. This is essential for providing a buffer
+// that can be uploaded directly to cloud services like Supabase, both locally and on Vercel.
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 
